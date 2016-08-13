@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<!--
+  - Application context definition for "springapp" DispatcherServlet.
+  -->
+
+<beans>
+    <bean id="springappController" class="com.awgtek.rcptsbo.controller.SpringappController">
+    	<property name="productManager">
+    		<ref bean="prodMan"/>
+    	</property>
+		<property name="receiptsService">
+			<ref bean="receiptsService"/>
+		</property>
+		<property name="receiptItemsService">
+			<ref bean="receiptItemsService"/>
+		</property>
+		<property name="storeService">
+			<ref bean="storeService"/>
+		</property>
+    </bean>
+	
+    
+    <bean id="storeService" class="com.awgtek.rcptsbo.service.StoreService"/>
+	
+	<bean id="receiptItemsService" 
+		class="com.awgtek.rcptsbo.service.ReceiptItemsService">
+		<property name="receiptItemsDao">
+			<ref bean="receiptItemsDaoImpl" />
+		</property>	
+	</bean>
+	
+	<bean id="receiptsService" 
+		class="com.awgtek.rcptsbo.service.ReceiptsService">
+		<property name="receiptsDao">
+			<ref bean="receiptsDaoImpl" />
+		</property>	
+	</bean>
+	
+	<bean id="receiptItemsDaoImpl"
+		class="com.awgtek.rcptsbo.dao.MockReceiptItemsDaoImpl">
+	</bean>
+	
+	<bean id="receiptsDaoImpl"
+		class="com.awgtek.rcptsbo.dao.MockReceiptsDaoImpl">
+	</bean>
+
+    <bean id="prodManDao" class="tests.MockProductManagerDaoImpl">
+        <property name="products">
+            <list>
+                <ref bean="product1"/>
+                <ref bean="product2"/>
+                <ref bean="product3"/>
+            </list>
+        </property>
+    </bean>
+
+	<bean id="prodMan" class="com.awgtek.rctsbo.bll.ProductManager">
+        <property name="productManagerDao">
+            <ref bean="prodManDao"/>
+        </property>
+<!--
+        <property name="products">
+            <list>
+                <ref bean="product1"/>
+                <ref bean="product2"/>
+                <ref bean="product3"/>
+            </list>
+        </property>
+-->
+	</bean>
+	
+	<bean id="product1" class="com.awgtek.rctsbo.bll.Product">
+		<property name="description"><value>Lamp</value></property>
+		<property name="price"><value>5.75</value></property>
+	</bean>
+	
+	<bean id="product2" class="com.awgtek.rctsbo.bll.Product">
+		<property name="description"><value>Table</value></property>
+		<property name="price"><value>75.25</value></property>
+	</bean>
+	
+	<bean id="product3" class="com.awgtek.rctsbo.bll.Product">
+		<property name="description"><value>Chair</value></property>
+		<property name="price"><value>22.79</value></property>
+	</bean>
+
+</beans>

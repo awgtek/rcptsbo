@@ -1,0 +1,61 @@
+<ivy-module version="2.0">
+	<info organisation="org.apache" module="WebProject" />
+	
+	<!-- Classpath management, thanks Maven -->
+	<configurations>
+        <conf name="compile" description="compile dependencies"/>
+        <conf name="runtime" description="runtime dependencies" extends="compile"/>
+        <conf name="test"    description="test dependencies" extends="runtime"/>
+    </configurations>
+    
+	<dependencies>
+<!-- 		<dependency org="org.slf4j" name="slf4j-api" rev="1.7.6" conf="compile->default"/> -->
+<!-- 		<dependency org="jstl" name="jstl" rev="1.2" conf="compile->default"/> -->
+<!-- 		<dependency org="ch.qos.logback" name="logback-classic" rev="1.1.2" conf="compile->default"/> -->
+		<dependency org="hsqldb" name="hsqldb" rev="1.8.0.10"/>
+		<dependency org="struts" name="struts" rev="1.2.9" conf="compile->master"/>
+		<dependency org="displaytag" name="displaytag" rev="1.2" 
+		conf="runtime->master"/>
+	<dependency org="commons-lang" name="commons-lang" rev="2.6"
+	conf="runtime->master"/>
+		<dependency org="org.springframework" name="spring" rev="2.0.8" 
+		conf="compile->default"
+		transitive="false">
+			<exclude org="javax.faces"/>
+			<exclude org="javax.jms"/>
+			<exclude org="javax.resource"/>
+			<exclude org="com.bea.wlplatform"/>
+			<exclude org="com.oracle.toplink"/>
+			<exclude org="javax.ejb"/>
+			<exclude org="org.apache.ibatis"/>
+			<exclude org="com.oracle"/>
+			<exclude org="freemarker"/>
+			<exclude org="groovy"/>
+			<exclude org="hessian"/>
+			<exclude org="jexcelapi"/>
+			<exclude org="jruby"/>
+			<exclude org="poi"/>
+			<exclude org="xml-apis"/>
+			<exclude org="javax.servlet" name="servlet-api"/>
+			<exclude org="javax.servlet" name="jsp-api"/>
+		</dependency>
+		<dependency org="org.springframework" name="spring-mock" rev="2.0.8" 
+		conf="test->master"
+		transitive="false"/>
+<!-- 		<dependency org="org.slf4j" name="slf4j-api" rev="1.6.1" conf="compile->default" /> -->
+      	<dependency org="org.slf4j" name="jcl-over-slf4j" rev="1.6.1" conf="runtime->default" />
+      	<dependency org="org.slf4j" name="slf4j-log4j12" rev="1.6.1" conf="runtime->default" />
+<!--       	<dependency org="org.apache.logging.log4j" name="log4j-core" rev="2.6.1" conf="runtime->default" /> -->
+		<dependency org="javax.servlet.jsp.jstl" name="jstl-api" rev="1.2" conf="runtime->default"
+		transitive="false">
+			<exclude org="javax.servlet" name="servlet-api"/>
+			<exclude org="javax.servlet" name="jsp-api"/>
+		</dependency>
+		<dependency org="org.glassfish.web" name="jstl-impl" rev="1.2" conf="runtime->default"
+		transitive="false">
+			<exclude org="javax.servlet" name="servlet-api"/>
+			<exclude org="javax.servlet" name="jsp-api"/>
+		</dependency>
+      	<exclude org="commons-logging"/>
+	</dependencies>
+</ivy-module>

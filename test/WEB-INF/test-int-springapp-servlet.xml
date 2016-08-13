@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+	<bean 
+	class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:db-JUNIT.properties</value>
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="receiptFormController" 
+	class="com.awgtek.rcptsbo.controller.ReceiptFormController">
+		<property name="receiptsService">
+			<ref bean="receiptsService"/>
+		</property>
+	</bean>
+	
+	<bean id="receiptsService" 
+		class="com.awgtek.rcptsbo.service.ReceiptsService">
+		<property name="receiptsDao">
+			<ref bean="receiptsDaoImpl" />
+		</property>	
+	</bean>
+	
+	<bean id="receiptsDaoImpl"
+		class="com.awgtek.rcptsbo.dao.ReceiptsDaoImpl">
+		<property name="ds">
+			<ref bean="dataSource"/>
+		</property>	
+	</bean>
+		
+	
+    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+      <property name="driverClassName"><value>${db.driverClassName}</value></property>
+      <property name="url">
+        <value>${db.url}</value>
+      </property>
+      <property name="username"><value>${db.user}</value></property>
+      <property name="password"><value>${db.password}</value></property>
+    </bean>
+	
+</beans>

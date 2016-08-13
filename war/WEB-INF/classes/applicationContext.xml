@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+	<import resource="jmxContext.xml"/>
+	<import resource="applicationDataSources.xml"/>
+
+	<bean id="dbUpgrader" lazy-init="false"
+		class="com.awgtek.rcptsbo.init.DbUpgrader" init-method="execute">
+		<property name="ds">
+			<ref bean="dataSource"/>
+		</property>	
+	</bean>
+		
+	
+   
+
+</beans>

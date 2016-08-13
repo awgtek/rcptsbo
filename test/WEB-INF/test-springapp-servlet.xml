@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+
+	<bean id="receiptFormController" 
+	class="com.awgtek.rcptsbo.controller.ReceiptFormController">
+		<property name="receiptsService">
+			<ref bean="receiptsService"/>
+		</property>
+		
+	</bean>
+	
+	<bean id="receiptsService" 
+		class="com.awgtek.rcptsbo.service.ReceiptsService">
+		<property name="receiptsDao">
+			<ref bean="mockReceiptsDaoImpl" />
+		</property>	
+	</bean>
+	
+	<bean id="mockReceiptsDaoImpl"
+		class="com.awgtek.rcptsbo.dao.MockReceiptsDaoImpl"></bean>
+	
+	<bean id="storeFormController" 
+	class="com.awgtek.rcptsbo.controller.StoreFormController">
+		<property name="storeService">
+			<ref bean="storeService"/>
+		</property>
+		<property name="successView"><value>store.htm</value></property>
+		
+	</bean>
+	
+	<bean id="storeService" 
+		class="com.awgtek.rcptsbo.service.StoreService">
+		<property name="storeDao">
+			<ref bean="mockStoreDaoImpl" />
+		</property>	
+	</bean>
+	
+	<bean id="mockStoreDaoImpl"
+		class="com.awgtek.rcptsbo.dao.MockStoreDaoImpl"></bean>
+</beans>

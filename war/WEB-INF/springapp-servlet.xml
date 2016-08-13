@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<!--
+  - Application context definition for "springapp" DispatcherServlet.
+  -->
+
+<beans>
+	
+<!-- 	<context:property-placeholder
+     location="file:///${ext.prop.dir}db.properties"/>
+ -->	
+ 	<!--  Controller for the initial "Hello" page -->
+    <bean id="springappController" class="com.awgtek.rcptsbo.controller.SpringappController">
+    	<property name="productManager">
+    		<ref bean="prodMan"/>
+    	</property>
+		<property name="receiptsService">
+			<ref bean="receiptsService"/>
+		</property>
+		<property name="receiptItemsService">
+			<ref bean="receiptItemsService"/>
+		</property>
+		<property name="storeService">
+			<ref bean="storeService"/>
+		</property>
+    </bean>
+
+	<!--  Validator and Form Controller for the "Price Increase" page -->
+	<bean id="priceIncreaseValidator" class="com.awgtek.rctsbo.bll.PriceIncreaseValidator"/>
+	<bean id="priceIncreaseForm" class="com.awgtek.rcptsbo.controller.PriceIncreaseFormController">
+		<property name="sessionForm"><value>true</value></property>
+		<property name="commandName"><value>priceIncrease</value></property>
+		<property name="commandClass"><value>com.awgtek.rctsbo.bll.PriceIncrease</value></property>
+		<property name="validator"><ref bean="priceIncreaseValidator"/></property>
+		<property name="formView"><value>priceincrease</value></property>
+		<property name="successView"><value>hello.htm</value></property>
+		<property name="productManager"><ref bean="prodMan"/></property>
+	</bean>
+
+    <bean id="prodManDao" class="com.awgtek.rctsbo.dal.ProductManagerDaoJdbc">
+        <property name="dataSource">
+            <ref bean="dataSource"/>
+        </property>
+    </bean>
+    
+	<bean id="prodMan" class="com.awgtek.rctsbo.bll.ProductManager">
+        <property name="productManagerDao">
+            <ref bean="prodManDao"/>
+        </property>
+ 	</bean>
+ 	
+ 	<bean id="receiptItemFormController" 
+ 	class="com.awgtek.rcptsbo.controller.ReceiptItemFormController">
+		<property name="sessionForm"><value>true</value></property>
+		<property name="commandName"><value>receiptItem</value></property>
+		<property name="commandClass"><value>com.awgtek.rcptsbo.domain.ReceiptItem</value></property>
+		<property name="validator">
+			<bean class="com.awgtek.rcptsbo.domain.ReceiptItemValidator"></bean></property>
+		<property name="formView"><value>receiptitem</value></property>
+		<property name="successView"><value>receiptitem.htm</value></property>
+		<property name="receiptsService">
+			<ref bean="receiptsService"/>
+		</property>
+		<property name="receiptItemsService">
+			<ref bean="receiptItemsService"/>
+		</property>
+		<property name="receiptItemCounter">
+			<ref bean="jmxCounter"/>
+		</property>
+	</bean>
+ 	
+ 	<bean id="receiptFormController" 
+ 	class="com.awgtek.rcptsbo.controller.ReceiptFormController">
+		<property name="sessionForm"><value>true</value></property>
+		<property name="commandName"><value>receipt</value></property>
+		<property name="commandClass"><value>com.awgtek.rcptsbo.domain.Receipt</value></property>
+		<property name="validator">
+			<bean class="com.awgtek.rcptsbo.domain.ReceiptValidator"></bean></property>
+		<property name="formView"><value>receipt</value></property>
+		<property name="successView"><value>receiptitem.htm</value></property>
+		<property name="receiptsService">
+			<ref bean="receiptsService"/>
+		</property>
+		<property name="storeService">
+			<ref bean="storeService"/>
+		</property>
+	</bean>
+	
+	<bean id="receiptItemsService" 
+		class="com.awgtek.rcptsbo.service.ReceiptItemsService">
+		<property name="receiptItemsDao">
+			<ref bean="receiptItemsDaoImpl" />
+		</property>	
+	</bean>
+	
+	<bean id="receiptsService" 
+		class="com.awgtek.rcptsbo.service.ReceiptsService">
+		<property name="receiptsDao">
+			<ref bean="receiptsDaoImpl" />
+		</property>	
+	</bean>
+	
+	<bean id="receiptItemsDaoImpl"
+		class="com.awgtek.rcptsbo.dao.ReceiptItemsDaoImpl">
+		<property name="ds">
+			<ref bean="dataSource"/>
+		</property>	
+	</bean>
+	
+	<bean id="receiptsDaoImpl"
+		class="com.awgtek.rcptsbo.dao.ReceiptsDaoImpl">
+		<property name="ds">
+			<ref bean="dataSource"/>
+		</property>	
+		<property name="storeDao">
+			<ref bean="storeDaoImpl" />
+		</property>	
+	</bean>
+ 	
+ 	<bean id="storeFormController" 
+	class="com.awgtek.rcptsbo.controller.StoreFormController">
+		<property name="storeService">
+			<ref bean="storeService"/>
+		</property>
+		<property name="successView"><value>store.htm</value></property>
+		<property name="sessionForm"><value>true</value></property>
+		<property name="commandName"><value>store</value></property>
+		<property name="commandClass"><value>com.awgtek.rcptsbo.domain.Store</value></property>
+			
+	</bean>
+	
+	<bean id="storeService" 
+		class="com.awgtek.rcptsbo.service.StoreService">
+		<property name="storeDao">
+			<ref bean="storeDaoImpl" />
+		</property>	
+	</bean>
+	
+	<bean id="storeDaoImpl"
+		class="com.awgtek.rcptsbo.dao.StoreDaoImpl">
+		<property name="ds">
+			<ref bean="dataSource"/>
+		</property>	
+	</bean>
+ 	
+ 	<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+		<property name="basename"><value>messages</value></property>
+	</bean>
+    <bean id="urlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+        <property name="mappings">
+            <props>
+                <prop key="/hello.htm">springappController</prop>
+                <prop key="/priceincrease.htm">priceIncreaseForm</prop>
+                <prop key="/receipt.htm">receiptFormController</prop>
+                <prop key="/receiptitem.htm">receiptItemFormController</prop>
+                <prop key="/store.htm">storeFormController</prop>
+            </props>
+        </property>
+    </bean>
+    
+    
+    <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="viewClass"><value>org.springframework.web.servlet.view.JstlView</value></property>
+        <property name="prefix"><value>/WEB-INF/jsp/</value></property>
+        <property name="suffix"><value>.jsp</value></property>
+    </bean>
+</beans>

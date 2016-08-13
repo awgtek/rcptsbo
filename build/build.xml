@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="rcptsbo" default="usage" basedir="..">
+	<description>
+		Create a Spring MVC (WAR) with Ant build script
+	</description>
+    <property file="build/build.properties"/>
+
+	<!-- Project Structure -->
+	<property name="jdk.version" value="1.6" />
+	<property name="projectName" value="Receipts Back Object" />
+	
+	<property name="resources.dir" location="resources" />
+	<property name="web.dir" value="war" />
+	<property name="web.classes.dir" location="${web.dir}/WEB-INF/classes" />
+	<property name="target.dir" location="target" />
+	<property name="target.temp.dir" location="target/temp" />
+	
+	
+	<tstamp prefix="build-info">
+		<format property="current-date" pattern="d-MMMM-yyyy" locale="en" />
+		<format property="current-time" pattern="hh:mm:ss a z" locale="en" />
+		<format property="year-month-day" pattern="yyyy-MM-dd" locale="en" />
+	</tstamp>
+	<property name="war-file-name" value="${project-name}.war" />
+	
+	<property name="src.dir" value="src"/>
+	<property name="build.dir" value="build/tmp"/>
+	<property name="lib.dir" value="${web.dir}/WEB-INF/lib"/>
+	<property name="dist.dir" value="dist"/>
+	
+	<property name="htdocs.dir" value="htdocs"/>
+	
+	<property name="webapp.dir" value="webapp"/>
+    <property name="name" value="springapp"/>
+
+    <path id="master-classpath">
+        <fileset dir="${lib.dir}">
+            <include name="*.jar"/>
+        </fileset>
+        <!-- We need the servlet API classes:        -->
+        <!--   for Tomcat 4.1 use servlet.jar        -->
+        <!--   for Tomcat 5.0 use servlet-api.jar    -->
+        <!--   for Other app server - check the docs -->
+        <fileset dir="${appserver.home}/lib">
+            <include name="servlet*.jar"/>
+        </fileset>
+        <pathelement path="${web.classes.dir}"/>
+    	<fileset dir="c:/libs">
+    		<include name="junit.jar"/>
+    	</fileset>
+    </path>
+
+
+    <target name="usage">
+        <echo message=""/>
+        <echo message="${name} build file"/>
+        <echo message="-----------------------------------"/>
+        <echo message=""/>
+        <echo message="Available targets are:"/>
+        <echo message=""/>
+        <echo message="build     --> Build the application"/>
+        <echo message="deploy    --> Deploy application as directory"/>
+        <echo message="deploywar --> Deploy application as a WAR file"/>
+        <echo message="install   --> Install application in Tomcat"/>
+        <echo message="reload    --> Reload application in Tomcat"/>
+        <echo message="start     --> Start Tomcat application"/>
+        <echo message="stop      --> Stop Tomcat application"/>
+        <echo message="list      --> List Tomcat applications"/>
+        <echo message=""/>
+    </target>
+
+	<path id="boot.classpath" location="C:/Program Files/Java/jdk1.6.0_35/jre/lib/rt.jar" />
+    
+	<target name="build" depends="ivy-cache-paths" description="Compile main source tree java files">
+        <mkdir dir="${web.classes.dir}"/>
+        <javac destdir="${web.classes.dir}" target="${jdk.version}" source="${jdk.version}" debug="true"
+               deprecation="false" optimize="false" failonerror="true" includeantruntime="false"
+                bootclasspathref="boot.classpath">
+            <src path="${src.dir}"/>
+            <classpath refid="master-classpath"/>
+            <classpath refid="ivy.compile.path"/>
+        </javac>
+    </target>
+
+    <target name="deploy" depends="resolve, build" description="Deploy application">
+        <copy todir="${deploy.path}/${name}" preservelastmodified="true">
+            <fileset dir="${web.dir}">
+                <include name="**/*.*"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="deploywar" depends="packagewar" description="Deploy application as a WAR file">
+        <copy todir="${deploy.path}" preservelastmodified="true">
+            <fileset dir=".">
+                <include name="*.war"/>
+            </fileset>
+        </copy>
+    </target>
+	<target name="deploywar-to-prod" depends="packagewar">
+	  <scp 
+	  remoteTodir="[user@ip:path]"
+	  keyfile="[opensshkey]"
+	  trust="yes"
+	  sftp="true">
+	    <fileset dir=".">
+	      <include name="*.war"/>
+	    </fileset>
+	  </scp>
+	</target>
+    <target name="packagewar" depends="resolve, build" description="package the war file">
+     	<echo>Creating ${name}.war</echo>
+        <war destfile="${name}.war"
+             webxml="${web.dir}/WEB-INF/web.xml">
+            <fileset dir="${web.dir}">
+                <include name="**/*.*"/>
+            </fileset>
+        </war>
+    </target>
+	
+	<!-- ivy start -->
+	<target name="resolve" description="retrieve dependencies with ivy">
+		<echo message="Getting dependencies...${jdk.version}" />
+		<ivy:retrieve pattern="${lib.dir}/[artifact]-[revision].[ext]"
+			conf="runtime" />
+
+		<ivy:cachepath pathid="ivy.compile.path" conf="compile" />
+		<ivy:cachepath pathid="ivy.runtime.path" conf="runtime" />
+		<ivy:cachepath pathid="ivy.test.path" conf="test" />
+
+	</target>
+	<target name="ivy-cache-paths">
+		<ivy:cachepath pathid="ivy.compile.path" conf="compile" />
+		<ivy:cachepath pathid="ivy.runtime.path" conf="runtime" />
+		<ivy:cachepath pathid="ivy.test.path" conf="test" />
+	</target>
+    <target name="clean-deploy" description="Remove deploy directories">
+        <delete>
+        	<fileset  dir="${deploy.path}/${name}">
+    			<include name="**/*.*"/>
+    		</fileset>
+    	</delete>
+    </target>
+	
+	<target name="clean-classes" description="clean output directories">
+		<delete>
+			<fileset dir="${web.classes.dir}">
+			    <include name="**/*.class"/>
+			</fileset>
+		</delete>
+	</target>
+
+    <target name="clean-lib" description="Remove build directories">
+        <delete dir="${lib.dir}"/>
+    </target>
+
+    <target name="clean-all-ivy" depends="clean-lib" description="clean ivy cache">
+        <ivy:cleancache />
+    </target>
+	<!-- install ivy if you don't have ivyide-->
+	<target name="ivy" description="Install ivy">
+		<mkdir dir="${user.home}/.ant/lib" />
+		<get dest="${user.home}/.ant/lib/ivy.jar" 
+		src="http://search.maven.org/remotecontent?filepath=org/apache/ivy/ivy/2.4.0-rc1/ivy-2.4.0-rc1.jar" />
+	</target>
+	<!-- ivy end -->
+	<target name="install-jsch" description="install jsch for scp task">
+		<mkdir dir="${user.home}/.ant/lib" />
+		<get dest="${user.home}/.ant/lib/jsch.jar" 
+		src="http://search.maven.org/remotecontent?filepath=org/lucee/jsch/0.1.53/jsch-0.1.53.jar" />
+	</target>
+	
+	<property name="test.classes.dir" value="test/WEB-INF/classes"></property>
+	
+	<target name="receiptsTests" depends="compileTests,dropTables,createTables">
+        <junit printsummary="on"
+               fork="false"
+               haltonfailure="false"
+               failureproperty="tests.failed"
+               showoutput="true">
+            <formatter type="brief" usefile="false"/>
+			<classpath>
+				<path refid="master-classpath"></path>
+				<pathelement path="${test.classes.dir}"/>
+				<path refid="ivy.test.path"/>
+			</classpath>
+            <batchtest>
+                <fileset dir="${test.classes.dir}">
+                    <include name="**/Test*.*"/>
+                </fileset>
+            </batchtest>
+
+        </junit>
+
+        <fail if="tests.failed">
+        tests.failed=${tests.failed}
+        ***********************************************************
+        ***********************************************************
+        ****  One or more tests failed!  Check the output ...  ****
+        ***********************************************************
+        ***********************************************************
+        </fail>
+	</target>
+	
+    <target name="junit" depends="compileTests,build,dropTables,createTables,loadData" description="Run JUnit Tests">
+        <junit printsummary="on"
+               fork="false"
+               haltonfailure="false"
+               failureproperty="tests.failed"
+               showoutput="true">
+			<classpath>
+				<path refid="master-classpath"></path>
+				<pathelement path="${test.classes.dir}"/>
+			</classpath>
+            <formatter type="brief" usefile="false"/>
+
+            <batchtest>
+                <fileset dir="${web.classes.dir}">
+                    <include name="**/Test*.*"/>
+                </fileset>
+            </batchtest>
+
+        </junit>
+
+        <fail if="tests.failed">
+        tests.failed=${tests.failed}
+        ***********************************************************
+        ***********************************************************
+        ****  One or more tests failed!  Check the output ...  ****
+        ***********************************************************
+        ***********************************************************
+        </fail>
+    </target>
+	<!-- Compile Java source from ${src.dir} and output it to ${web.classes.dir} -->
+	<target name="compileTests" depends="ivy-cache-paths, build" description="compile source code">
+		<javac destdir="${test.classes.dir}" source="${jdk.version}" target="${jdk.version}" 
+			debug="true" includeantruntime="false" 
+			  bootclasspathref="boot.classpath">
+			<classpath>
+				<path refid="master-classpath"></path>
+				<path refid="ivy.test.path"/>
+			</classpath>
+			<src path="test" />
+		</javac>
+	</target>
+
+	<target name="compile" depends="init, resolve" description="compile source code">
+		<javac destdir="${web.classes.dir}"  source="${jdk.version}" target="${jdk.version}" 
+			debug="true" includeantruntime="false" classpathref="ivy.compile.path">
+			<src path="${src.dir}" />
+		</javac>
+	</target>
+
+	<!-- Copy *.xml or *.properties from ${resources.dir} to ${web.classes.dir} -->
+	<target name="copy-resources" 
+                description="copy Java resources like xml and properties files">
+		<copy todir="${web.classes.dir}">
+			<fileset dir="${resources.dir}">
+				<include name="**/*.xml" />
+				<include name="**/*.properties" />
+			</fileset>
+		</copy>
+	</target>
+
+	<!-- Create the final WAR file for deployment -->
+	<target name="package" depends="clean, compile, copy-resources" 
+                description="create a war file">
+
+		<!-- ivy get dependencies and put it in ${lib.dir} -->
+		<ivy:retrieve pattern="${lib.dir}/[artifact]-[revision].[ext]" conf="runtime" />
+
+		<war destfile="${target.dir}/${war-file-name}" webxml="${web.dir}/WEB-INF/web.xml">
+			
+			<webinf dir="${web.dir}/WEB-INF" />
+			<lib dir="${lib.dir}" />
+			<zipfileset dir="${web.dir}/resources" prefix="resources" />
+			<manifest>
+				<attribute name="Built-By" value="${builder}" />
+				<attribute name="Built-On" value="${build-info.current-date}" />
+				<attribute name="Built-At" value="${build-info.current-time}" />
+			</manifest>
+		</war>
+	</target>
+
+	<!-- Create folders -->
+	<target name="init">
+		<mkdir dir="${src.dir}" />
+		<mkdir dir="${target.dir}" />
+		<mkdir dir="${web.classes.dir}" />
+	</target>
+
+	<!-- Delete folders -->
+	<target name="clean" description="clean up">
+		<delete dir="${web.classes.dir}" />
+		<delete dir="${target.dir}" />
+	</target>
+
+	<target name="main" depends="package" />
+	
+<!-- ============================================================== -->
+<!-- Tomcat tasks - remove these if you don't have Tomcat installed -->
+<!-- ============================================================== -->	
+	<path id="catalina-ant-classpath">
+	    <!-- We need the Catalina jars for Tomcat -->
+	    <!--  * for other app servers - check the docs -->
+	    <fileset dir="${appserver.home}/lib">
+	        <include name="catalina-ant.jar"/>
+	    </fileset>
+	</path>
+	 
+	<taskdef name="install" classname="org.apache.catalina.ant.InstallTask">
+ 	    <classpath refid="catalina-ant-classpath"/>
+	<!--	<classpath>
+			<path location="${appserver.home}/lib/catalina-ant.jar"/>
+		</classpath> -->
+	</taskdef>
+    <taskdef name="reload" classname="org.apache.catalina.ant.ReloadTask">
+        <classpath>
+            <path location="${appserver.home}/lib/catalina-ant.jar"/>
+        </classpath>
+    </taskdef>
+    <taskdef name="list" classname="org.apache.catalina.ant.ListTask">
+        <classpath>
+            <path location="${appserver.home}/lib/catalina-ant.jar"/>
+        </classpath>
+    </taskdef>
+    <taskdef name="start" classname="org.apache.catalina.ant.StartTask">
+        <classpath>
+            <path location="${appserver.home}/lib/catalina-ant.jar"/>
+        </classpath>
+    </taskdef>
+    <taskdef name="stop" classname="org.apache.catalina.ant.StopTask">
+        <classpath>
+            <path location="${appserver.home}/lib/catalina-ant.jar"/>
+        </classpath>
+    </taskdef>
+
+    <target name="install" description="Install application in Tomcat">
+        <install url="${tomcat.manager.url}"
+                 username="${tomcat.manager.username}"
+                 password="${tomcat.manager.password}"
+                 path="/${name}"
+                 war="${name}"/>
+    </target>
+
+    <target name="reload" description="Reload application in Tomcat">
+        <reload url="${tomcat.manager.url}"
+                 username="${tomcat.manager.username}"
+                 password="${tomcat.manager.password}"
+                 path="/${name}"/>
+    </target>
+
+    <target name="start" description="Start Tomcat application">
+        <start url="${tomcat.manager.url}"
+                 username="${tomcat.manager.username}"
+                 password="${tomcat.manager.password}"
+                 path="/${name}"/>
+    </target>
+
+    <target name="stop" description="Stop Tomcat application">
+        <stop url="${tomcat.manager.url}"
+                 username="${tomcat.manager.username}"
+                 password="${tomcat.manager.password}"
+                 path="/${name}"/>
+    </target>
+
+    <target name="list" description="List Tomcat applications">
+        <list url="${tomcat.manager.url}"
+                 username="${tomcat.manager.username}"
+                 password="${tomcat.manager.password}"/>
+    </target>
+
+<!-- End Tomcat tasks -->
+
+	<target name="javadoc">
+      <javadoc packagenames="com.awgtek.*" sourcepath="${src.dir}" 
+         destdir="doc" version="true" windowtitle="Fax Application">
+
+         <doctitle><![CDATA[<h1>= Fax Application = </h1>]]></doctitle>
+         <bottom><![CDATA[Copyright © 2011. All Rights Reserved.]]></bottom>
+         <group title="util packages" packages="com.awgtek.util.*"/>
+         <group title="web packages" packages="com.awgtek.web.*"/>
+         <group title="data packages" packages="com.awgtek.entity.*:com.awgtek.dao.*"/>
+
+      </javadoc>
+   </target>
+	
+<!-- HSQL DB tasks
+to run db manager did:
+cd C:\Work\workspaces\rcpts\rcptsbo\war\WEB-INF\lib
+java -cp hsqldb-1.8.0.10.jar  org.hsqldb.util.DatabaseManager -
+-url jdbc:hsqldb:C:/Work/workspaces/rcpts/rcptsbo/db/test
+-->
+
+    <target name="createTables">
+        <echo message="CREATE TABLES USING: ${db.driver} ${db.url}"/>
+        <sql driver="${db.driver}"
+             url="${db.url}"
+             userid="${db.user}"
+             password="${db.pw}"
+             onerror="continue">  
+            <classpath refid="master-classpath"/>
+
+        CREATE TABLE products (
+          id INTEGER NOT NULL PRIMARY KEY,
+          description varchar(255),
+          price decimal(15,2)
+        );
+        CREATE INDEX products_description ON products(description);
+        	
+        CREATE TABLE stores (
+			id BIGINT IDENTITY PRIMARY KEY,
+        	storename varchar(255),
+        	storeaddress varchar(1000)
+        );
+
+        CREATE TABLE receipts (
+        	id BIGINT IDENTITY PRIMARY KEY,
+        	storeid BIGINT,
+        	dateofpurchase date default 'CURRENT_DATE',
+        	FOREIGN KEY (storeid) REFERENCES stores
+        );
+        	
+        CREATE TABLE receipt_items (
+        	id BIGINT IDENTITY PRIMARY KEY,
+        	productname varchar(255),
+        	productbrand varchar(255),
+        	genericname varchar(255),
+        	quantity INTEGER,
+        	totalcost DECIMAL(15,2) NOT NULL,
+        	sizeunitamount DOUBLE,
+        	sizeunittype varchar(255),
+        	sizeunitcount BIGINT,
+        	receiptid BIGINT,
+        	FOREIGN KEY (receiptid) REFERENCES receipts
+        );
+            COMMIT;
+            SHUTDOWN
+
+       	
+        </sql> 
+    </target>
+
+    <target name="dropTables">
+        <echo message="DROP TABLES USING: ${db.driver} ${db.url}"/>
+        <sql driver="${db.driver}"
+             url="${db.url}"
+             userid="${db.user}"
+             password="${db.pw}"
+             onerror="continue">  
+            <classpath refid="master-classpath"/>
+
+	        DROP TABLE products;
+	    	DROP TABLE receipt_items;
+	        DROP TABLE receipts;
+        	DROP TABLE stores;
+            COMMIT;
+            SHUTDOWN
+
+        </sql> 
+    </target>
+
+    <target name="loadData">
+        <echo message="LOAD DATA USING: ${db.driver} ${db.url}"/>
+        <sql driver="${db.driver}"
+             url="${db.url}"
+             userid="${db.user}"
+             password="${db.pw}"
+             onerror="continue">  
+            <classpath refid="master-classpath"/>
+
+        INSERT INTO products (id, description, price) values(1, 'Lamp', 5.78);
+        INSERT INTO products (id, description, price) values(2, 'Table', 75.29);
+        INSERT INTO products (id, description, price) values(3, 'Chair', 22.81);
+        COMMIT;
+        SHUTDOWN
+
+        </sql> 
+    </target>
+
+    <target name="printData">
+        <echo message="PRINT DATA USING: ${db.driver} ${db.url}"/>
+        <sql driver="${db.driver}"
+             url="${db.url}"
+             userid="${db.user}"
+             password="${db.pw}"
+             onerror="continue"
+             print="true">  
+            <classpath refid="master-classpath"/>
+
+        SELECT * FROM products;
+        SELECT * FROM receipts;
+
+        </sql> 
+    </target>
+
+    <target name="clearData">
+        <echo message="CLEAR DATA USING: ${db.driver} ${db.url}"/>
+        <sql driver="${db.driver}"
+             url="${db.url}"
+             userid="${db.user}"
+             password="${db.pw}"
+             onerror="continue">  
+            <classpath refid="master-classpath"/>
+
+        DELETE FROM products;
+            COMMIT;
+            SHUTDOWN
+
+        </sql> 
+    </target>
+</project>
